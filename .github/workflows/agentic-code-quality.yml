@@ -6,12 +6,17 @@ on:
     paths:
       - "**.cs"
       - "**.csproj"
-      - ".github/workflows/agentic-code-quality-fixed.yml"
+      - ".github/workflows/agentic-code-quality.yml"
   push:
     branches: [main, develop]
     paths:
       - "**.cs"
       - "**.csproj"
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
 
 jobs:
   code-quality-analysis:
@@ -148,24 +153,20 @@ jobs:
 
           cat quality-report.md
 
-      - name: Comment Report on PR
+      - name: Comment on PR
         if: github.event_name == 'pull_request'
         uses: actions/github-script@v7
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const fs = require('fs');
             const report = fs.readFileSync('quality-report.md', 'utf8');
-            try {
-              github.rest.issues.createComment({
-                issue_number: context.issue.number,
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                body: report
-              });
-            } catch (error) {
-              console.log('Could not comment on PR, but analysis completed');
-            }
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: report
+            });
 
       - name: Upload Quality Reports
         if: always()
